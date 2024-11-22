@@ -36,6 +36,11 @@ public class User {
 
     }
 
+    public User(String username, String description) {
+        this.username = username;
+        this.description = description;
+    }
+
     public int getId() {
         return id;
     }

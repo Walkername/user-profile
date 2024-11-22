@@ -9,6 +9,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import ru.walkername.user_profile.dto.UserDTO;
+import ru.walkername.user_profile.dto.UserDetails;
 import ru.walkername.user_profile.models.User;
 import ru.walkername.user_profile.services.UsersService;
 import ru.walkername.user_profile.util.UserErrorResponse;
@@ -19,6 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/users")
+@CrossOrigin
 public class UsersController {
 
     private final UsersService usersService;
@@ -36,6 +38,11 @@ public class UsersController {
     ) {
 
         return convertToUserDTO(usersService.findOne(id));
+    }
+
+    @GetMapping()
+    public List<User> index() {
+        return usersService.getAll();
     }
 
     @PostMapping("/add")
@@ -64,6 +71,13 @@ public class UsersController {
         usersService.save(user);
 
         return ResponseEntity.ok(HttpStatus.OK);
+    }
+
+    @GetMapping("/movie/{id}")
+    public List<UserDetails> getUsersByMovie(
+            @PathVariable("id") int id
+    ) {
+        return usersService.getUsersByMovie(id);
     }
 
     @ExceptionHandler
