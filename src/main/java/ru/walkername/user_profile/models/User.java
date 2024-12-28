@@ -23,14 +23,8 @@ public class User {
     // TODO: create email field
 
     @Column(name = "description")
+    @Size(max = 500, message = "Description should be less than 500 characters")
     private String description;
-
-    //private String photoUrl;
-
-    //private Movie favouriteMovie;
-
-    //@ManyToMany()
-    //private List<Movie> movies;
 
     public User() {
 

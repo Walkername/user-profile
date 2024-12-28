@@ -14,6 +14,7 @@ import ru.walkername.user_profile.models.User;
 import ru.walkername.user_profile.services.UsersService;
 import ru.walkername.user_profile.util.UserErrorResponse;
 import ru.walkername.user_profile.util.UserNotCreatedException;
+import ru.walkername.user_profile.util.UserNotUpdatedException;
 import ru.walkername.user_profile.util.UserValidator;
 
 import java.util.List;
@@ -70,6 +71,39 @@ public class UsersController {
 
         usersService.save(user);
 
+        return ResponseEntity.ok(HttpStatus.OK);
+    }
+
+    @PatchMapping("/edit/{id}")
+    public ResponseEntity<HttpStatus> update(
+            @PathVariable("id") int id,
+            UserDTO userDTO,
+            BindingResult bindingResult
+    ) {
+        User user = convertToUser(userDTO);
+
+        if (bindingResult.hasErrors()) {
+            StringBuilder errorMsg = new StringBuilder();
+            List<FieldError> errors = bindingResult.getFieldErrors();
+            for (FieldError error : errors) {
+                errorMsg.append(error.getField())
+                        .append(" - ")
+                        .append(error.getDefaultMessage())
+                        .append(";");
+            }
+
+            throw new UserNotUpdatedException(errorMsg.toString());
+        }
+
+        usersService.update(id, user);
+        return ResponseEntity.ok(HttpStatus.OK);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<HttpStatus> delete(
+            @PathVariable("id") int id
+    ) {
+        usersService.delete(id);
         return ResponseEntity.ok(HttpStatus.OK);
     }
 

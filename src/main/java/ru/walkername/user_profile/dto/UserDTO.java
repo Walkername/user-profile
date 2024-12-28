@@ -16,14 +16,8 @@ public class UserDTO {
     // TODO: create email field
 
     @Column(name = "description")
+    @Size(max = 500, message = "Description should be less than 500 characters")
     private String description;
-
-    //private String photoUrl;
-
-    //private Movie favouriteMovie;
-
-    //@ManyToMany()
-    // List<Movie> movies;
 
     public String getUsername() {
         return username;

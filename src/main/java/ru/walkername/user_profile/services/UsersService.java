@@ -80,4 +80,15 @@ public class UsersService {
     public void save(User user) {
         usersRepository.save(user);
     }
+
+    @Transactional
+    public void delete(int id) {
+        usersRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void update(int id, User user) {
+        user.setId(id);
+        usersRepository.save(user);
+    }
 }
