@@ -14,7 +14,6 @@ import ru.walkername.user_profile.models.User;
 import ru.walkername.user_profile.services.UsersService;
 import ru.walkername.user_profile.util.UserErrorResponse;
 import ru.walkername.user_profile.util.UserNotCreatedException;
-import ru.walkername.user_profile.util.UserNotUpdatedException;
 import ru.walkername.user_profile.util.UserValidator;
 
 import java.util.List;
@@ -51,14 +50,29 @@ public class UsersController {
             @RequestBody @Valid UserDTO userDTO,
             BindingResult bindingResult
     ) {
+        User user = validateUser(userDTO, bindingResult);
+        usersService.save(user);
+        return ResponseEntity.ok(HttpStatus.OK);
+    }
+
+    @PatchMapping("/edit/{id}")
+    public ResponseEntity<HttpStatus> update(
+            @PathVariable("id") int id,
+            @RequestBody @Valid UserDTO userDTO,
+            BindingResult bindingResult
+    ) {
+        User user = validateUser(userDTO, bindingResult);
+        usersService.update(id, user);
+        return ResponseEntity.ok(HttpStatus.OK);
+    }
+
+    private User validateUser(UserDTO userDTO, BindingResult bindingResult) {
         User user = convertToUser(userDTO);
         userValidator.validate(user, bindingResult);
 
         if (bindingResult.hasErrors()) {
             StringBuilder errorMsg = new StringBuilder();
-
             List<FieldError> errors = bindingResult.getFieldErrors();
-
             for (FieldError error : errors) {
                 errorMsg.append(error.getField())
                         .append(" - ")
@@ -69,34 +83,7 @@ public class UsersController {
             throw new UserNotCreatedException(errorMsg.toString());
         }
 
-        usersService.save(user);
-
-        return ResponseEntity.ok(HttpStatus.OK);
-    }
-
-    @PatchMapping("/edit/{id}")
-    public ResponseEntity<HttpStatus> update(
-            @PathVariable("id") int id,
-            UserDTO userDTO,
-            BindingResult bindingResult
-    ) {
-        User user = convertToUser(userDTO);
-
-        if (bindingResult.hasErrors()) {
-            StringBuilder errorMsg = new StringBuilder();
-            List<FieldError> errors = bindingResult.getFieldErrors();
-            for (FieldError error : errors) {
-                errorMsg.append(error.getField())
-                        .append(" - ")
-                        .append(error.getDefaultMessage())
-                        .append(";");
-            }
-
-            throw new UserNotUpdatedException(errorMsg.toString());
-        }
-
-        usersService.update(id, user);
-        return ResponseEntity.ok(HttpStatus.OK);
+        return user;
     }
 
     @DeleteMapping("/delete/{id}")
