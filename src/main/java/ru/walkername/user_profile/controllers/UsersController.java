@@ -25,19 +25,20 @@ public class UsersController {
 
     private final UsersService usersService;
     private final UserValidator userValidator;
+    private final ModelMapper modelMapper;
 
     @Autowired
-    public UsersController(UsersService usersService, UserValidator userValidator) {
+    public UsersController(UsersService usersService, UserValidator userValidator, ModelMapper modelMapper) {
         this.usersService = usersService;
         this.userValidator = userValidator;
+        this.modelMapper = modelMapper;
     }
 
     @GetMapping("/{id}")
-    public UserDTO getUser(
+    public User getUser(
             @PathVariable("id") int id
     ) {
-
-        return convertToUserDTO(usersService.findOne(id));
+        return usersService.findOne(id);
     }
 
     @GetMapping()
@@ -66,26 +67,6 @@ public class UsersController {
         return ResponseEntity.ok(HttpStatus.OK);
     }
 
-    private User validateUser(UserDTO userDTO, BindingResult bindingResult) {
-        User user = convertToUser(userDTO);
-        userValidator.validate(user, bindingResult);
-
-        if (bindingResult.hasErrors()) {
-            StringBuilder errorMsg = new StringBuilder();
-            List<FieldError> errors = bindingResult.getFieldErrors();
-            for (FieldError error : errors) {
-                errorMsg.append(error.getField())
-                        .append(" - ")
-                        .append(error.getDefaultMessage())
-                        .append(";");
-            }
-
-            throw new UserNotCreatedException(errorMsg.toString());
-        }
-
-        return user;
-    }
-
     @DeleteMapping("/delete/{id}")
     public ResponseEntity<HttpStatus> delete(
             @PathVariable("id") int id
@@ -111,8 +92,27 @@ public class UsersController {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
+    private User validateUser(UserDTO userDTO, BindingResult bindingResult) {
+        User user = convertToUser(userDTO);
+        userValidator.validate(user, bindingResult);
+
+        if (bindingResult.hasErrors()) {
+            StringBuilder errorMsg = new StringBuilder();
+            List<FieldError> errors = bindingResult.getFieldErrors();
+            for (FieldError error : errors) {
+                errorMsg.append(error.getField())
+                        .append(" - ")
+                        .append(error.getDefaultMessage())
+                        .append(";");
+            }
+
+            throw new UserNotCreatedException(errorMsg.toString());
+        }
+
+        return user;
+    }
+
     private UserDTO convertToUserDTO(User user) {
-        ModelMapper modelMapper = new ModelMapper();
         if (user == null) {
             return null;
         }
@@ -120,7 +120,6 @@ public class UsersController {
     }
 
     private User convertToUser(UserDTO userDTO) {
-        ModelMapper modelMapper = new ModelMapper();
         return modelMapper.map(userDTO, User.class);
     }
 }
