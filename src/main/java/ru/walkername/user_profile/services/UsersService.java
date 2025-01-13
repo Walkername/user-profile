@@ -51,7 +51,6 @@ public class UsersService {
 
         RatingsResponse ratingsResponse = restTemplate.getForObject(url, RatingsResponse.class);
         List<Rating> ratings = Objects.requireNonNull(ratingsResponse).getRatings();
-
         List<Integer> userIds = new ArrayList<>();
         if (ratings != null) {
             for (Rating rating : ratings) {
@@ -66,7 +65,7 @@ public class UsersService {
             for (Rating rating : ratings) {
                 for (User user : users) {
                     if (rating.getUserId() == user.getId()) {
-                        UserDetails userDetails = new UserDetails(user, rating.getMovieId(), rating.getRating());
+                        UserDetails userDetails = new UserDetails(user, rating);
                         usersByMovie.add(userDetails);
                     }
                 }
