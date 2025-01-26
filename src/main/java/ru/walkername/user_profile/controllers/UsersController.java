@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import ru.walkername.user_profile.dto.NewRatingDTO;
 import ru.walkername.user_profile.dto.UserDTO;
 import ru.walkername.user_profile.dto.UserDetails;
 import ru.walkername.user_profile.models.User;
@@ -15,8 +16,10 @@ import ru.walkername.user_profile.services.UsersService;
 import ru.walkername.user_profile.util.UserErrorResponse;
 import ru.walkername.user_profile.util.UserNotCreatedException;
 import ru.walkername.user_profile.util.UserValidator;
+import ru.walkername.user_profile.util.UserWrongAverageRatingException;
 
 import java.util.List;
+import java.util.function.Function;
 
 @RestController
 @RequestMapping("/users")
@@ -51,7 +54,9 @@ public class UsersController {
             @RequestBody @Valid UserDTO userDTO,
             BindingResult bindingResult
     ) {
-        User user = validateUser(userDTO, bindingResult);
+        User user = convertToUser(userDTO);
+        userValidator.validate(user, bindingResult);
+        validateUser(bindingResult, UserNotCreatedException::new);
         usersService.save(user);
         return ResponseEntity.ok(HttpStatus.OK);
     }
@@ -62,8 +67,17 @@ public class UsersController {
             @RequestBody @Valid UserDTO userDTO,
             BindingResult bindingResult
     ) {
-        User user = validateUser(userDTO, bindingResult);
-        usersService.update(id, user);
+        // Getting user from userDTO just to validate it: has the same username or not
+        User userToValidate = convertToUser(userDTO);
+        userValidator.validate(userToValidate, bindingResult);
+        validateUser(bindingResult, UserNotCreatedException::new);
+
+        // Getting an existing user and setting fields from dto for them
+        User user = usersService.findOne(id);
+        if (user != null) {
+            modelMapper.map(userDTO, user);
+            usersService.save(user);
+        }
         return ResponseEntity.ok(HttpStatus.OK);
     }
 
@@ -82,6 +96,22 @@ public class UsersController {
         return usersService.getUsersByMovie(id);
     }
 
+    @PatchMapping("/update-avg-rating/{id}")
+    public ResponseEntity<HttpStatus> updateAvgRating(
+            @PathVariable("id") int id,
+            @RequestBody @Valid NewRatingDTO ratingDTO,
+            BindingResult bindingResult
+    ) {
+        validateUser(bindingResult, UserWrongAverageRatingException::new);
+        usersService.updateAverageRating(id, ratingDTO.getRating(), ratingDTO.isUpdate(), ratingDTO.getOldRating());
+        return ResponseEntity.ok(HttpStatus.OK);
+    }
+
+    @GetMapping("/top-user")
+    public User getTopUser() {
+        return usersService.getTopUser();
+    }
+
     @ExceptionHandler
     private ResponseEntity<UserErrorResponse> handleException(UserNotCreatedException ex) {
         UserErrorResponse response = new UserErrorResponse(
@@ -92,10 +122,17 @@ public class UsersController {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
-    private User validateUser(UserDTO userDTO, BindingResult bindingResult) {
-        User user = convertToUser(userDTO);
-        userValidator.validate(user, bindingResult);
+    @ExceptionHandler
+    private ResponseEntity<UserErrorResponse> handleException(UserWrongAverageRatingException ex) {
+        UserErrorResponse response = new UserErrorResponse(
+                ex.getMessage(),
+                System.currentTimeMillis()
+        );
 
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    private void validateUser(BindingResult bindingResult, Function<String, ? extends RuntimeException> exceptionFunction) {
         if (bindingResult.hasErrors()) {
             StringBuilder errorMsg = new StringBuilder();
             List<FieldError> errors = bindingResult.getFieldErrors();
@@ -106,17 +143,8 @@ public class UsersController {
                         .append(";");
             }
 
-            throw new UserNotCreatedException(errorMsg.toString());
+            throw exceptionFunction.apply(errorMsg.toString());
         }
-
-        return user;
-    }
-
-    private UserDTO convertToUserDTO(User user) {
-        if (user == null) {
-            return null;
-        }
-        return modelMapper.map(user, UserDTO.class);
     }
 
     private User convertToUser(UserDTO userDTO) {

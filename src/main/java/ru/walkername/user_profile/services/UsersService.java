@@ -37,6 +37,22 @@ public class UsersService {
         return user.orElse(null);
     }
 
+    @Transactional
+    public void save(User user) {
+        usersRepository.save(user);
+    }
+
+    @Transactional
+    public void delete(int id) {
+        usersRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void update(int id, User user) {
+        user.setId(id);
+        usersRepository.save(user);
+    }
+
     public List<User> getAll() {
         return usersRepository.findAll();
     }
@@ -76,18 +92,27 @@ public class UsersService {
     }
 
     @Transactional
-    public void save(User user) {
-        usersRepository.save(user);
+    public void updateAverageRating(int id, double newRating, boolean isUpdate, double oldRating) {
+        Optional<User> movie = usersRepository.findById(id);
+        movie.ifPresent(value -> {
+            int scores = value.getScores();
+            double averageRating = value.getAverageRating();
+            double newAverageRating;
+
+            if (!isUpdate) {
+                newAverageRating = (averageRating * scores + newRating) / (scores + 1);
+                value.setScores(scores + 1);
+            } else {
+                newAverageRating = (averageRating * scores - oldRating + newRating) / scores;
+            }
+
+            value.setAverageRating(newAverageRating);
+        });
     }
 
-    @Transactional
-    public void delete(int id) {
-        usersRepository.deleteById(id);
+    public User getTopUser() {
+        Optional<User> user = usersRepository.findUserWithHighestScores();
+        return user.orElse(null);
     }
 
-    @Transactional
-    public void update(int id, User user) {
-        user.setId(id);
-        usersRepository.save(user);
-    }
 }

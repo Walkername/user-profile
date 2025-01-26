@@ -26,13 +26,37 @@ public class User {
     @Size(max = 500, message = "Description should be less than 500 characters")
     private String description;
 
+    @Column(name = "average_rating")
+    private double averageRating;
+
+    @Column(name = "scores")
+    private int scores;
+
     public User() {
 
     }
 
-    public User(String username, String description) {
+    public User(String username, String description, double averageRating, int scores) {
         this.username = username;
         this.description = description;
+        this.averageRating = averageRating;
+        this.scores = scores;
+    }
+
+    public double getAverageRating() {
+        return averageRating;
+    }
+
+    public void setAverageRating(double averageRating) {
+        this.averageRating = averageRating;
+    }
+
+    public int getScores() {
+        return scores;
+    }
+
+    public void setScores(int scores) {
+        this.scores = scores;
     }
 
     public int getId() {
