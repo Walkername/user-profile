@@ -18,9 +18,10 @@ public class User {
     @Column(name = "username")
     private String username;
 
-    // TODO: create name field, like: Timur Walker ...
-
-    // TODO: create email field
+    @NotEmpty(message = "Password cannot be empty")
+    @Size(min = 5, message = "Password should be greater than 5 characters")
+    @Column(name = "password")
+    private String password;
 
     @Column(name = "description")
     @Size(max = 500, message = "Description should be less than 500 characters")
@@ -32,15 +33,20 @@ public class User {
     @Column(name = "scores")
     private int scores;
 
+    @Column(name = "role")
+    private String role;
+
     public User() {
 
     }
 
-    public User(String username, String description, double averageRating, int scores) {
+    public User(String username, String password, String description, double averageRating, int scores, String role) {
         this.username = username;
+        this.password = password;
         this.description = description;
         this.averageRating = averageRating;
         this.scores = scores;
+        this.role = role;
     }
 
     public double getAverageRating() {
@@ -81,5 +87,21 @@ public class User {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

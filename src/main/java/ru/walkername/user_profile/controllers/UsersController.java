@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.walkername.user_profile.dto.NewRatingDTO;
 import ru.walkername.user_profile.dto.UserDTO;
 import ru.walkername.user_profile.dto.UserDetails;
+import ru.walkername.user_profile.dto.UserResponse;
 import ru.walkername.user_profile.models.User;
 import ru.walkername.user_profile.services.UsersService;
 import ru.walkername.user_profile.util.UserErrorResponse;
@@ -45,8 +46,8 @@ public class UsersController {
     }
 
     @GetMapping()
-    public List<User> index() {
-        return usersService.getAll();
+    public List<UserResponse> index() {
+        return usersService.getAll().stream().map(this::convertToUserResponse).toList();
     }
 
     @PostMapping("/add")
@@ -149,5 +150,9 @@ public class UsersController {
 
     private User convertToUser(UserDTO userDTO) {
         return modelMapper.map(userDTO, User.class);
+    }
+
+    private UserResponse convertToUserResponse(User user) {
+        return modelMapper.map(user, UserResponse.class);
     }
 }

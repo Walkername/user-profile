@@ -1,6 +1,5 @@
 package ru.walkername.user_profile.dto;
 
-import jakarta.persistence.Column;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 
@@ -8,16 +7,11 @@ public class UserDTO {
 
     @NotEmpty(message = "Nickname should not be empty")
     @Size(min = 5, max = 20, message = "Nickname should be greater than 5 and less than 20 characters")
-    @Column(name = "username")
     private String username;
 
-    // TODO: create name field, like: Timur Walker ...
-
-    // TODO: create email field
-
-    @Column(name = "description")
-    @Size(max = 500, message = "Description should be less than 500 characters")
-    private String description;
+    @NotEmpty(message = "Password cannot be empty")
+    @Size(min = 5, message = "Password should be greater than 5 characters")
+    private String password;
 
     public String getUsername() {
         return username;
@@ -27,11 +21,11 @@ public class UserDTO {
         this.username = username;
     }
 
-    public String getDescription() {
-        return description;
+    public String getPassword() {
+        return password;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setPassword(String password) {
+        this.password = password;
     }
 }
