@@ -39,6 +39,7 @@ public class TokenService {
 
         return JWT.create()
                 .withSubject("User details")
+                .withClaim("id", user.get().getId())
                 .withClaim("username", username)
                 .withClaim("role", role)
                 .withIssuedAt(new Date())
