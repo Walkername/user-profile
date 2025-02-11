@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
-import ru.walkername.user_profile.dto.UserDTO;
+import ru.walkername.user_profile.dto.AuthDTO;
 import ru.walkername.user_profile.models.User;
 import ru.walkername.user_profile.services.AuthService;
 import ru.walkername.user_profile.services.TokenService;
@@ -41,25 +41,25 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public Map<String, String> register(
-            @RequestBody @Valid UserDTO userDTO,
+    public ResponseEntity<HttpStatus> register(
+            @RequestBody @Valid AuthDTO authDTO,
             BindingResult bindingResult
     ) {
-        User user = convertToUser(userDTO);
+        User user = convertToUser(authDTO);
         userValidator.validate(user, bindingResult);
         validateUser(bindingResult);
 
         authService.register(user);
-        String token = tokenService.generateToken(user.getUsername());
-        return Map.of("token", token);
+        //String token = tokenService.generateToken(user.getUsername());
+        return ResponseEntity.ok(HttpStatus.OK);
     }
 
-    @GetMapping("/login")
+    @PostMapping("/login")
     public Map<String, String> login(
-            @RequestBody @Valid UserDTO userDTO,
+            @RequestBody @Valid AuthDTO authDTO,
             BindingResult bindingResult
     ) {
-        User user = convertToUser(userDTO);
+        User user = convertToUser(authDTO);
         //userValidator.validate(user, bindingResult);
         validateUser(bindingResult);
 
@@ -93,8 +93,8 @@ public class AuthController {
         }
     }
 
-    private User convertToUser(UserDTO userDTO) {
-        return modelMapper.map(userDTO, User.class);
+    private User convertToUser(AuthDTO authDTO) {
+        return modelMapper.map(authDTO, User.class);
     }
 
 }
