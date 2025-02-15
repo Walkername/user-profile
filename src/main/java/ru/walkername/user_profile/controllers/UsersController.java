@@ -1,5 +1,7 @@
 package ru.walkername.user_profile.controllers;
 
+import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,10 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
-import ru.walkername.user_profile.dto.NewRatingDTO;
-import ru.walkername.user_profile.dto.UserDTO;
-import ru.walkername.user_profile.dto.UserDetails;
+import ru.walkername.user_profile.dto.*;
 import ru.walkername.user_profile.models.User;
+import ru.walkername.user_profile.services.TokenService;
 import ru.walkername.user_profile.services.UsersService;
 import ru.walkername.user_profile.util.UserErrorResponse;
 import ru.walkername.user_profile.util.UserNotCreatedException;
@@ -29,40 +30,50 @@ public class UsersController {
     private final UsersService usersService;
     private final UserValidator userValidator;
     private final ModelMapper modelMapper;
+    private final TokenService tokenService;
 
     @Autowired
-    public UsersController(UsersService usersService, UserValidator userValidator, ModelMapper modelMapper) {
+    public UsersController(UsersService usersService, UserValidator userValidator, ModelMapper modelMapper, TokenService tokenService) {
         this.usersService = usersService;
         this.userValidator = userValidator;
         this.modelMapper = modelMapper;
+        this.tokenService = tokenService;
     }
 
     @GetMapping("/{id}")
-    public User getUser(
+    public UserResponse getUser(
             @PathVariable("id") int id
     ) {
-        return usersService.findOne(id);
+        return convertToUserResponse(usersService.findOne(id));
     }
+
+//    @GetMapping("/{username}")
+//    public UserResponse getUser(
+//            @PathVariable("username") String username
+//    ) {
+//        return convertToUserResponse(usersService.findByUsername(username).orElse(null));
+//    }
 
     @GetMapping()
-    public List<User> index() {
-        return usersService.getAll();
+    public List<UserResponse> index() {
+        return usersService.getAll().stream().map(this::convertToUserResponse).toList();
     }
 
-    @PostMapping("/add")
-    public ResponseEntity<HttpStatus> add(
-            @RequestBody @Valid UserDTO userDTO,
-            BindingResult bindingResult
-    ) {
-        User user = convertToUser(userDTO);
-        userValidator.validate(user, bindingResult);
-        validateUser(bindingResult, UserNotCreatedException::new);
-        usersService.save(user);
-        return ResponseEntity.ok(HttpStatus.OK);
-    }
+//    @PostMapping("/add")
+//    public ResponseEntity<HttpStatus> add(
+//            @RequestBody @Valid UserDTO userDTO,
+//            BindingResult bindingResult
+//    ) {
+//        User user = convertToUser(userDTO);
+//        userValidator.validate(user, bindingResult);
+//        validateUser(bindingResult, UserNotCreatedException::new);
+//        usersService.save(user);
+//        return ResponseEntity.ok(HttpStatus.OK);
+//    }
 
     @PatchMapping("/edit/{id}")
-    public ResponseEntity<HttpStatus> update(
+    public ResponseEntity<String> update(
+            @RequestHeader("Authorization") String authorization,
             @PathVariable("id") int id,
             @RequestBody @Valid UserDTO userDTO,
             BindingResult bindingResult
@@ -72,13 +83,24 @@ public class UsersController {
         userValidator.validate(userToValidate, bindingResult);
         validateUser(bindingResult, UserNotCreatedException::new);
 
+        try {
+            String token = authorization.substring(7);
+            DecodedJWT jwt = tokenService.validateToken(token);
+            int requestId = jwt.getClaim("id").asInt();
+            if (requestId != id) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+        } catch (JWTVerificationException e) {
+            return new ResponseEntity<>("Invalid or expired token", HttpStatus.UNAUTHORIZED);
+        }
+
         // Getting an existing user and setting fields from dto for them
         User user = usersService.findOne(id);
         if (user != null) {
             modelMapper.map(userDTO, user);
             usersService.save(user);
         }
-        return ResponseEntity.ok(HttpStatus.OK);
+        return ResponseEntity.ok(HttpStatus.OK + "");
     }
 
     @DeleteMapping("/delete/{id}")
@@ -149,5 +171,9 @@ public class UsersController {
 
     private User convertToUser(UserDTO userDTO) {
         return modelMapper.map(userDTO, User.class);
+    }
+
+    private UserResponse convertToUserResponse(User user) {
+        return modelMapper.map(user, UserResponse.class);
     }
 }
