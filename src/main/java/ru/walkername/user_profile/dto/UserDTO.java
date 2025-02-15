@@ -1,23 +1,11 @@
 package ru.walkername.user_profile.dto;
 
+import jakarta.validation.constraints.Size;
+
 public class UserDTO {
 
-    private String username;
-
+    @Size(max = 500, message = "Description should not be greater than 500 characters")
     private String description;
-
-    public UserDTO(String username, String description) {
-        this.username = username;
-        this.description = description;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
 
     public String getDescription() {
         return description;

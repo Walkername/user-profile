@@ -78,17 +78,17 @@ public class UsersController {
             @RequestBody @Valid UserDTO userDTO,
             BindingResult bindingResult
     ) {
-        // Getting user from userDTO just to validate it: has the same username or not
-        User userToValidate = convertToUser(userDTO);
-        userValidator.validate(userToValidate, bindingResult);
         validateUser(bindingResult, UserNotCreatedException::new);
 
         try {
             String token = authorization.substring(7);
             DecodedJWT jwt = tokenService.validateToken(token);
             int requestId = jwt.getClaim("id").asInt();
-            if (requestId != id) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            String role = jwt.getClaim("role").asString();
+            if (!role.equals("ADMIN")) {
+                if (requestId != id) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                }
             }
         } catch (JWTVerificationException e) {
             return new ResponseEntity<>("Invalid or expired token", HttpStatus.UNAUTHORIZED);
@@ -98,6 +98,41 @@ public class UsersController {
         User user = usersService.findOne(id);
         if (user != null) {
             modelMapper.map(userDTO, user);
+            usersService.save(user);
+        }
+        return ResponseEntity.ok(HttpStatus.OK + "");
+    }
+
+    @PatchMapping("/edit/username/{id}")
+    public ResponseEntity<String> updateUsername(
+            @RequestHeader("Authorization") String authorization,
+            @PathVariable("id") int id,
+            @RequestBody @Valid UsernameDTO usernameDTO,
+            BindingResult bindingResult
+    ) {
+        // Getting user from userDTO just to validate it: has the same username or not
+        User userToValidate = convertToUser(usernameDTO);
+        userValidator.validate(userToValidate, bindingResult);
+        validateUser(bindingResult, UserNotCreatedException::new);
+
+        try {
+            String token = authorization.substring(7);
+            DecodedJWT jwt = tokenService.validateToken(token);
+            int requestId = jwt.getClaim("id").asInt();
+            String role = jwt.getClaim("role").asString();
+            if (!role.equals("ADMIN")) {
+                if (requestId != id) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                }
+            }
+        } catch (JWTVerificationException e) {
+            return new ResponseEntity<>("Invalid or expired token", HttpStatus.UNAUTHORIZED);
+        }
+
+        // Getting an existing user and setting fields from dto for them
+        User user = usersService.findOne(id);
+        if (user != null) {
+            modelMapper.map(usernameDTO, user);
             usersService.save(user);
         }
         return ResponseEntity.ok(HttpStatus.OK + "");
@@ -173,7 +208,12 @@ public class UsersController {
         return modelMapper.map(userDTO, User.class);
     }
 
+    private User convertToUser(UsernameDTO usernameDTO) {
+        return modelMapper.map(usernameDTO, User.class);
+    }
+
     private UserResponse convertToUserResponse(User user) {
         return modelMapper.map(user, UserResponse.class);
     }
+
 }
