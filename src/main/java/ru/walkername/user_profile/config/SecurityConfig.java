@@ -33,7 +33,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/users/delete/{id}", "/users/add").hasAuthority("ADMIN")
                         .requestMatchers("/auth/login", "/auth/register", "/error", "/users",
-                                "/users/{id}").permitAll()
+                                "/users/{id}", "/users/movie/{id}", "/users/update-avg-rating/{id}"
+                        ).permitAll()
                         .anyRequest().hasAnyAuthority("USER", "ADMIN")
                 )
                 .csrf(AbstractHttpConfigurer::disable)
