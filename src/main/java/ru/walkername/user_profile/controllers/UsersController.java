@@ -85,10 +85,8 @@ public class UsersController {
             DecodedJWT jwt = tokenService.validateToken(token);
             int requestId = jwt.getClaim("id").asInt();
             String role = jwt.getClaim("role").asString();
-            if (!role.equals("ADMIN")) {
-                if (requestId != id) {
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-                }
+            if (requestId != id && !role.equals("ADMIN")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
         } catch (JWTVerificationException e) {
             return new ResponseEntity<>("Invalid or expired token", HttpStatus.UNAUTHORIZED);
@@ -120,10 +118,8 @@ public class UsersController {
             DecodedJWT jwt = tokenService.validateToken(token);
             int requestId = jwt.getClaim("id").asInt();
             String role = jwt.getClaim("role").asString();
-            if (!role.equals("ADMIN")) {
-                if (requestId != id) {
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-                }
+            if (requestId != id && !role.equals("ADMIN")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
         } catch (JWTVerificationException e) {
             return new ResponseEntity<>("Invalid or expired token", HttpStatus.UNAUTHORIZED);
