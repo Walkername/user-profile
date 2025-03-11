@@ -33,7 +33,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/users/delete/{id}", "/users/add").hasAuthority("ADMIN")
                         .requestMatchers("/auth/login", "/auth/register", "/error", "/users",
-                                "/users/{id}", "/users/movie/{id}", "/users/update-avg-rating/{id}"
+                                "/users/{id}", "/users/movie/{id}", "/users/update-avg-rating/{id}",
+                                "/users/username/{username}"
                         ).permitAll()
                         .anyRequest().hasAnyAuthority("USER", "ADMIN")
                 )

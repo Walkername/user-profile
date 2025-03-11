@@ -47,12 +47,12 @@ public class UsersController {
         return convertToUserResponse(usersService.findOne(id));
     }
 
-//    @GetMapping("/{username}")
-//    public UserResponse getUser(
-//            @PathVariable("username") String username
-//    ) {
-//        return convertToUserResponse(usersService.findByUsername(username).orElse(null));
-//    }
+    @GetMapping("/username/{username}")
+    public UserResponse getUserByUsername(
+            @PathVariable("username") String username
+    ) {
+        return convertToUserResponse(usersService.findByUsername(username).orElse(null));
+    }
 
     @GetMapping()
     public List<UserResponse> index() {
@@ -209,6 +209,9 @@ public class UsersController {
     }
 
     private UserResponse convertToUserResponse(User user) {
+        if (user == null) {
+            return null;
+        }
         return modelMapper.map(user, UserResponse.class);
     }
 
