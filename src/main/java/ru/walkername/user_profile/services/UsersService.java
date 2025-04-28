@@ -24,12 +24,17 @@ public class UsersService {
 
     private final String RATING_SERVICE_API;
 
+    private final RestTemplate restTemplate;
+
     @Autowired
     public UsersService(
             UsersRepository usersRepository,
-            @Value("${rating.service.url}") String RATING_SERVICE_API) {
+            @Value("${rating.service.url}") String RATING_SERVICE_API,
+            RestTemplate restTemplate
+    ) {
         this.usersRepository = usersRepository;
         this.RATING_SERVICE_API = RATING_SERVICE_API;
+        this.restTemplate = restTemplate;
     }
 
     public User findOne(int id) {
@@ -62,7 +67,6 @@ public class UsersService {
     }
 
     public List<UserDetails> getUsersByMovie(int id) {
-        RestTemplate restTemplate = new RestTemplate();
         String url = RATING_SERVICE_API + "/ratings/movie/" + id;
 
         RatingsResponse ratingsResponse = restTemplate.getForObject(url, RatingsResponse.class);
